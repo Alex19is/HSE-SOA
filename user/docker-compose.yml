@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14.8-alpine3.18
+    environment:
+      POSTGRES_USER: Alex
+      POSTGRES_PASSWORD: users_password
+      POSTGRES_DB: users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - user_network
+
+  # Сервис для API
+  api:
+    build:
+      context: ../api  # Путь к директории с кодом API
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8001  # Команда для запуска API
+    ports:
+      - "8001:8001"  # Порт, на котором будет работать API
+    depends_on:
+      - db  # API зависит от базы данных
+    networks:
+      - user_network
+
+  # Сервис для пользователей
+  users:
+    build:
+      context: ./  # Путь к текущей директории, где находится user/
+    command: uvicorn user_service:app --reload --host 0.0.0.0 --port 8000  # Запуск сервиса пользователей
+    volumes:
+      - ./user:/app  # Монтируем файлы из директории user
+    ports:
+      - "8000:8000"  # Порт, на котором будет работать сервис пользователей
+    depends_on:
+      - db  # Сервис пользователей зависит от базы данных
+    networks:
+      - user_network
+
+volumes:
+  db-data:  # Том для хранения данных базы данных
+
+networks:
+  user_network:
+    driver: bridge  # Сеть для связи контейнеров между собой
