@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: Post API Service
+  version: "1.0.0"
+  description: API для управления постами с поддержкой создания, обновления, удаления, получения поста по ID и получения списка постов.
+servers:
+  - url: http://localhost:8001
+paths:
+  /posts:
+    post:
+      summary: Создание поста
+      operationId: createPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '200':
+          description: Пост успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Ошибка при создании поста
+    get:
+      summary: Получение списка постов с пагинацией
+      operationId: listPosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          required: false
+          description: Номер страницы
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 10
+          required: false
+          description: Количество записей на странице
+      responses:
+        '200':
+          description: Список постов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '400':
+          description: Ошибка получения списка постов
+  /posts/{post_id}:
+    parameters:
+      - name: post_id
+        in: path
+        description: Идентификатор поста (UUID)
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Получение поста по ID
+      operationId: getPost
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Пост найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Ошибка получения поста или доступ запрещён
+        '404':
+          description: Пост не найден
+    put:
+      summary: Обновление поста
+      operationId: updatePost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+      responses:
+        '200':
+          description: Пост успешно обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Ошибка обновления поста
+    delete:
+      summary: Удаление поста
+      operationId: deletePost
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Пост успешно удалён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Ошибка удаления поста
+        '403':
+          description: Доступ запрещён
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Идентификатор поста (UUID)
+        title:
+          type: string
+        description:
+          type: string
+        creator:
+          type: string
+          description: Логин пользователя, создавшего пост
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_private:
+          type: boolean
+          description: Если true, пост доступен только для создателя
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - title
+        - description
+        - creator
+        - created_at
+        - updated_at
+        - is_private
+        - tags
+    PostCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_private:
+          type: boolean
+          description: Если true, пост будет приватным
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - description
+        - is_private
+        - tags
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_private:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+

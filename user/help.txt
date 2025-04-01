@@ -1,0 +1,22 @@
+curl -X POST "http://localhost:8001/users/" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "post@example.com", "login": "post", "password": "pass123"}'
+
+
+curl -X POST "http://localhost:8001/token" \
+  -H "Content-Type: application/json" \
+  -d '{"login": "post", "password": "pass123"}'
+
+curl -X GET "http://localhost:8001/users/me" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+
+curl -X PUT "http://localhost:8001/users/me/first_name" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{"first_name": "Ivan"}'
+
+curl -X PUT "http://localhost:8001/users/me/email" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{"email": "new_email@example.com"}'

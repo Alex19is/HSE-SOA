@@ -63,7 +63,7 @@ def get_current_user(authorization: str = Header(...), db: Session = Depends(get
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authentication scheme")
 
-    token = authorization[7:]  # Извлекаем токен после "Bearer "
+    token = authorization[7:] 
     payload = decode_access_token(token)
     username = payload.get("sub")
     if username is None:
@@ -105,12 +105,12 @@ def login_for_access_token(login_data: schemas.LoginSchema, db: Session = Depend
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
-@app.get("/users/{user_id}", response_model=schemas.User)
-def read_user(user_id: int, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    return db_user
+# @app.get("/users/{user_id}", response_model=schemas.User)
+# def read_user(user_id: int, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+#     db_user = db.query(models.User).filter(models.User.id == user_id).first()
+#     if db_user is None:
+#         raise HTTPException(status_code=404, detail="Пользователь не найден")
+#     return db_user
 
 
 @app.put("/users/me/first_name")
