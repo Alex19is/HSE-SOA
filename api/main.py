@@ -1,4 +1,3 @@
-# gateway_service.py
 import grpc
 import requests
 from fastapi import FastAPI, Request, Depends, HTTPException
@@ -30,7 +29,12 @@ class PostUpdate(BaseModel):
     is_private: Optional[bool] = None
     tags: Optional[List[str]] = None
 
-#=========================================================
+class CommentCreate(BaseModel):
+    text: str
+
+# ------------------------------------------------------------------
+# Proxy для user_service (прямое пересылание)
+# ------------------------------------------------------------------
 @app.api_route("/users/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_users(request: Request, path: str):
     target_url = f"{USER_SERVICE_URL}/users/{path}"
@@ -55,8 +59,9 @@ async def proxy_token(request: Request):
     )
     return response.content
 
-
-# ===============================
+# ------------------------------------------------------------------
+# Dependency: проверка JWT и получение current_user из user_service
+# ------------------------------------------------------------------
 
 def get_current_user(request: Request):
     token = request.headers.get("Authorization")
@@ -69,12 +74,19 @@ def get_current_user(request: Request):
         raise HTTPException(status_code=resp.status_code, detail=resp.json())
     return resp.json()
 
+# ------------------------------------------------------------------
+# CRUD-эндпоинты для постов
+# ------------------------------------------------------------------
 @app.post("/posts", summary="Создание поста")
-async def create_post(post: PostCreate, request: Request, current_user: dict = Depends(get_current_user)):
+async def create_post(
+    post: PostCreate,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
     username = current_user.get("login")
     if not username:
         raise HTTPException(status_code=400, detail="User login not found")
-    
+
     grpc_request = post_pb2.CreatePostRequest(
         title=post.title,
         description=post.description,
@@ -87,46 +99,13 @@ async def create_post(post: PostCreate, request: Request, current_user: dict = D
         raise HTTPException(status_code=400, detail=grpc_response.error)
     return MessageToDict(grpc_response.post)
 
-@app.delete("/posts/{post_id}", summary="Удаление поста")
-async def delete_post(post_id: str, request: Request, current_user: dict = Depends(get_current_user)):
-    username = current_user.get("login")
-    if not username:
-        raise HTTPException(status_code=400, detail="User login not found")
-    
-    grpc_request = post_pb2.DeletePostRequest(
-        id=post_id,
-        creator=username
-    )
-    grpc_response = grpc_stub.DeletePost(grpc_request)
-    if grpc_response.error:
-        raise HTTPException(status_code=400, detail=grpc_response.error)
-    return {"message": grpc_response.message}
-
-@app.put("/posts/{post_id}", summary="Обновление поста")
-async def update_post(post_id: str, post: PostUpdate, request: Request, current_user: dict = Depends(get_current_user)):
-    username = current_user.get("login")
-    if not username:
-        raise HTTPException(status_code=400, detail="User login not found")
-    
-    grpc_request = post_pb2.UpdatePostRequest(
-        id=post_id,
-        title=post.title if post.title is not None else "",
-        description=post.description if post.description is not None else "",
-        is_private=post.is_private if post.is_private is not None else False,
-        tags=post.tags if post.tags is not None else [],
-        creator=username
-    )
-    grpc_response = grpc_stub.UpdatePost(grpc_request)
-    if grpc_response.error:
-        raise HTTPException(status_code=400, detail=grpc_response.error)
-    return MessageToDict(grpc_response.post)
-
 @app.get("/posts/{post_id}", summary="Получение поста по ID")
-async def get_post(post_id: str, request: Request, current_user: dict = Depends(get_current_user)):
+async def get_post(
+    post_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
     username = current_user.get("login")
-    if not username:
-        raise HTTPException(status_code=400, detail="User login not found")
-    
     grpc_request = post_pb2.GetPostRequest(
         id=post_id,
         requester=username
@@ -137,11 +116,13 @@ async def get_post(post_id: str, request: Request, current_user: dict = Depends(
     return MessageToDict(grpc_response.post)
 
 @app.get("/posts", summary="Получение списка постов с пагинацией")
-async def list_posts(request: Request, current_user: dict = Depends(get_current_user), page: int = 1, size: int = 10):
+async def list_posts(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    size: int = 10
+):
     username = current_user.get("login")
-    if not username:
-        raise HTTPException(status_code=400, detail="User login not found")
-    
     grpc_request = post_pb2.ListPostsRequest(
         page=page,
         size=size,
@@ -150,5 +131,96 @@ async def list_posts(request: Request, current_user: dict = Depends(get_current_
     grpc_response = grpc_stub.ListPosts(grpc_request)
     if grpc_response.error:
         raise HTTPException(status_code=400, detail=grpc_response.error)
-    posts_list = [MessageToDict(post) for post in grpc_response.posts]
-    return posts_list
+    return [MessageToDict(p) for p in grpc_response.posts]
+
+@app.put("/posts/{post_id}", summary="Обновление поста")
+async def update_post(
+    post_id: str,
+    post: PostUpdate,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    username = current_user.get("login")
+    grpc_request = post_pb2.UpdatePostRequest(
+        id=post_id,
+        title=post.title or "",
+        description=post.description or "",
+        is_private=post.is_private if post.is_private is not None else False,
+        tags=post.tags or [],
+        creator=username
+    )
+    grpc_response = grpc_stub.UpdatePost(grpc_request)
+    if grpc_response.error:
+        raise HTTPException(status_code=400, detail=grpc_response.error)
+    return MessageToDict(grpc_response.post)
+
+@app.delete("/posts/{post_id}", summary="Удаление поста")
+async def delete_post(
+    post_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    username = current_user.get("login")
+    grpc_request = post_pb2.DeletePostRequest(
+        id=post_id,
+        creator=username
+    )
+    grpc_response = grpc_stub.DeletePost(grpc_request)
+    if grpc_response.error:
+        raise HTTPException(status_code=400, detail=grpc_response.error)
+    return {"message": grpc_response.message}
+
+@app.post("/posts/{post_id}/like", summary="Лайк поста")
+async def like_post(
+    post_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    username = current_user.get("login")
+    grpc_request = post_pb2.LikePostRequest(
+        post_id=post_id,
+        user_login=username
+    )
+    grpc_response = grpc_stub.LikePost(grpc_request)
+    if grpc_response.error:
+        raise HTTPException(status_code=400, detail=grpc_response.error)
+    return {
+        "message": grpc_response.message,
+        "total_likes": grpc_response.total_likes
+    }
+
+@app.post("/posts/{post_id}/comments", summary="Добавление комментария")
+async def comment_post(
+    post_id: str,
+    comment: CommentCreate,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    username = current_user.get("login")
+    grpc_request = post_pb2.CommentPostRequest(
+        post_id=post_id,
+        user_login=username,
+        text=comment.text
+    )
+    grpc_response = grpc_stub.CommentPost(grpc_request)
+    if grpc_response.error:
+        raise HTTPException(status_code=400, detail=grpc_response.error)
+    return MessageToDict(grpc_response.comment)
+
+@app.get("/posts/{post_id}/comments", summary="Получение списка комментариев с пагинацией")
+async def list_comments(
+    post_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    size: int = 10
+):
+    grpc_request = post_pb2.ListCommentsRequest(
+        post_id=post_id,
+        page=page,
+        size=size
+    )
+    grpc_response = grpc_stub.ListComments(grpc_request)
+    if grpc_response.error:
+        raise HTTPException(status_code=400, detail=grpc_response.error)
+    return [MessageToDict(c) for c in grpc_response.comments]

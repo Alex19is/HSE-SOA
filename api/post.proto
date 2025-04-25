@@ -1,71 +1,119 @@
 syntax = "proto3";
-
 package postservice;
 
+// Сервис для работы с постами
 service PostService {
+  // CRUD для постов
   rpc CreatePost (CreatePostRequest) returns (PostResponse);
   rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
   rpc UpdatePost (UpdatePostRequest) returns (PostResponse);
-  rpc GetPost (GetPostRequest) returns (PostResponse);
-  rpc ListPosts (ListPostsRequest) returns (ListPostsResponse);
+  rpc GetPost    (GetPostRequest)    returns (PostResponse);
+  rpc ListPosts  (ListPostsRequest)  returns (ListPostsResponse);
+
+  // Новый метод: лайк поста
+  rpc LikePost    (LikePostRequest)    returns (LikePostResponse);
+  // Новый метод: добавить комментарий
+  rpc CommentPost (CommentPostRequest) returns (CommentPostResponse);
+  // Новый метод: список комментариев
+  rpc ListComments (ListCommentsRequest) returns (ListCommentsResponse);
 }
 
+// Описание структуры поста
 message Post {
-  string id = 1;
-  string title = 2;
+  string id          = 1;
+  string title       = 2;
   string description = 3;
-  string creator = 4;
-  string created_at = 5;
-  string updated_at = 6;
-  bool is_private = 7;
+  string creator     = 4;
+  string created_at  = 5;
+  string updated_at  = 6;
+  bool   is_private  = 7;
   repeated string tags = 8;
 }
 
+// CreatePost
 message CreatePostRequest {
-  string title = 1;
+  string title       = 1;
   string description = 2;
-  string creator = 3;
-  bool is_private = 4;
+  string creator     = 3;
+  bool   is_private  = 4;
   repeated string tags = 5;
 }
+message PostResponse {
+  Post   post  = 1;
+  string error = 2;
+}
 
+// DeletePost
 message DeletePostRequest {
-  string id = 1;
+  string id      = 1;
   string creator = 2;
 }
-
-message UpdatePostRequest {
-  string id = 1;
-  string title = 2;
-  string description = 3;
-  bool is_private = 4;
-  repeated string tags = 5;
-  string creator = 6;
-}
-
-message GetPostRequest {
-  string id = 1;
-  string requester = 2;
-}
-
-message ListPostsRequest {
-  int32 page = 1;
-  int32 size = 2;
-  string requester = 3;
-}
-
-message PostResponse {
-  Post post = 1;
-  string error = 2;
-}
-
 message DeletePostResponse {
   string message = 1;
-  string error = 2;
+  string error   = 2;
 }
 
+// UpdatePost
+message UpdatePostRequest {
+  string id          = 1;
+  string title       = 2;
+  string description = 3;
+  bool   is_private  = 4;
+  repeated string tags = 5;
+  string creator     = 6;
+}
+
+// GetPost / ListPosts
+message GetPostRequest {
+  string id        = 1;
+  string requester = 2;
+}
+message ListPostsRequest {
+  int32  page      = 1;
+  int32  size      = 2;
+  string requester = 3;
+}
 message ListPostsResponse {
   repeated Post posts = 1;
-  string error = 2;
+  string error        = 2;
 }
 
+// LikePost
+message LikePostRequest {
+  string post_id    = 1;
+  string user_login = 2;
+}
+message LikePostResponse {
+  string message     = 1;
+  int32  total_likes = 2;
+  string error       = 3;
+}
+
+// CommentPost
+message CommentPostRequest {
+  string post_id    = 1;
+  string user_login = 2;
+  string text       = 3;
+}
+message Comment {
+  string id         = 1;
+  string post_id    = 2;
+  string user_login = 3;
+  string text       = 4;
+  string created_at = 5;
+}
+message CommentPostResponse {
+  Comment comment = 1;
+  string error    = 2;
+}
+
+// ListComments
+message ListCommentsRequest {
+  string post_id = 1;
+  int32  page    = 2;
+  int32  size    = 3;
+}
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+  string error               = 2;
+}

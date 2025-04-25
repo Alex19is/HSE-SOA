@@ -7,6 +7,12 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 import models, schemas, database
+from kafka import KafkaProducer
+
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
 
 app = FastAPI()
 
@@ -90,6 +96,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    producer.send("user_register", {
+        "user_id": new_user.id,
+        "timestamp": datetime.utcnow().isoformat()
+    })
     return new_user
 
 @app.post("/token")
