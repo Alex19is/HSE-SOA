@@ -12,10 +12,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../api'
 import post_pb2
 import post_pb2_grpc
 
-producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
-)
+# producer = KafkaProducer(
+#     bootstrap_servers=['localhost:9092'],
+#     value_serializer=lambda v: json.dumps(v).encode('utf-8')
+# )
 
 class PostServiceServicer(post_pb2_grpc.PostServiceServicer):
     def __init__(self):
@@ -23,8 +23,8 @@ class PostServiceServicer(post_pb2_grpc.PostServiceServicer):
         self.likes = {}                  
         self.comments = {}               
 
-    def _send_event(self, topic: str, event: dict):
-        producer.send(topic, event)
+    # def _send_event(self, topic: str, event: dict):
+    #     producer.send(topic, event)
 
     def CreatePost(self, request, context):
         post_id = str(uuid.uuid4())
@@ -78,11 +78,11 @@ class PostServiceServicer(post_pb2_grpc.PostServiceServicer):
             return post_pb2.PostResponse(error="Access denied")
 
         now = datetime.utcnow().isoformat()
-        self._send_event('post_views', {
-            'post_id': post.id,
-            'user_login': request.requester,
-            'timestamp': now
-        })
+        # self._send_event('post_views', {
+        #     'post_id': post.id,
+        #     'user_login': request.requester,
+        #     'timestamp': now
+        # })
         return post_pb2.PostResponse(post=post)
 
     def ListPosts(self, request, context):
@@ -101,11 +101,11 @@ class PostServiceServicer(post_pb2_grpc.PostServiceServicer):
         likes_set = self.likes.setdefault(request.post_id, set())
         likes_set.add(request.user_login)
         now = datetime.utcnow().isoformat()
-        self._send_event('post_likes', {
-            'post_id': request.post_id,
-            'user_login': request.user_login,
-            'timestamp': now
-        })
+        # self._send_event('post_likes', {
+        #     'post_id': request.post_id,
+        #     'user_login': request.user_login,
+        #     'timestamp': now
+        # })
         return post_pb2.LikePostResponse(
             message="Like recorded",
             total_likes=len(likes_set)
@@ -125,12 +125,12 @@ class PostServiceServicer(post_pb2_grpc.PostServiceServicer):
             created_at=now
         )
         self.comments.setdefault(request.post_id, []).append(comment)
-        self._send_event('post_comments', {
-            'post_id': request.post_id,
-            'comment_id': comment_id,
-            'user_login': request.user_login,
-            'timestamp': now
-        })
+        # self._send_event('post_comments', {
+        #     'post_id': request.post_id,
+        #     'comment_id': comment_id,
+        #     'user_login': request.user_login,
+        #     'timestamp': now
+        # })
         return post_pb2.CommentPostResponse(comment=comment)
 
     def ListComments(self, request, context):

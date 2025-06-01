@@ -1,32 +1,32 @@
 curl -X POST "http://localhost:8001/users/" \
   -H "Content-Type: application/json" \
-  -d '{"email": "POST@kafka.com", "login": "kafka", "password": "pass123"}'
+  -d '{"email": "POST0@kafka.com", "login": "kafka0", "password": "pass123"}'
 
 
 curl -X POST "http://localhost:8001/token" \
   -H "Content-Type: application/json" \
-  -d '{"login": "kafka", "password": "pass123"}'
+  -d '{"login": "kafka0", "password": "pass123"}'
 
 curl -s -X POST http://localhost:8001/posts \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYSIsImV4cCI6IjIwMjUtMDQtMjFUMTc6MjA6MzcuODcxNTQ5In0.4b7d777e758209ab98d22b0245a1100a6cd01fbdd34d018a5497d2daf1c3b429" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3" \
   -d '{
-    "title": "Test post",
+    "title": "Test1 post",
     "description": "For Kafka testing",
     "is_private": false,
     "tags": ["kafka","test"]
   }'
 
-curl -s http://localhost:8001/posts/f349c38c-766c-4f97-afec-8b7aa61044e8 \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYSIsImV4cCI6IjIwMjUtMDQtMjFUMTc6MjA6MzcuODcxNTQ5In0.4b7d777e758209ab98d22b0245a1100a6cd01fbdd34d018a5497d2daf1c3b429"
+curl -s http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3"
 
-curl -s -X POST http://localhost:8001/posts/f349c38c-766c-4f97-afec-8b7aa61044e8/like \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJQT1NUIiwiZXhwIjoiMjAyNS0wNC0wOVQxNzoxMDoyMC4wOTY3MTEifQ.fd41018119de39fd5fba0259c6e383a7ee3b80cf805d255cf45c1d0c61c27f16"
+curl -s -X POST http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08/like \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3"
 
-curl -s -X POST http://localhost:8001/posts/f349c38c-766c-4f97-afec-8b7aa61044e8/comments \
+curl -s -X POST http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08/comments \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYSIsImV4cCI6IjIwMjUtMDQtMjFUMTc6MjA6MzcuODcxNTQ5In0.4b7d777e758209ab98d22b0245a1100a6cd01fbdd34d018a5497d2daf1c3b429" \
-  -d '{"text":"Hello Kafka!"}'
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3" \
+  -d '{"text":"Hello Kafka0!"}'
 
 kafka-console-consumer --bootstrap-server localhost:9092 --topic post_likes --from-beginning
 
