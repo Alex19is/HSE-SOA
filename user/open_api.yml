@@ -1,0 +1,268 @@
+openapi: 3.0.2
+info:
+  title: User API
+  description: API для управления пользователями
+  version: 1.0.0
+paths:
+  /users/:
+    post:
+      summary: Создание нового пользователя
+      description: Создает нового пользователя с указанными данными.
+      operationId: create_user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '200':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Логин уже зарегистрирован
+          
+  /token:
+    post:
+      summary: Получение access токена
+      description: Авторизация пользователя и получение токена доступа.
+      operationId: login_for_access_token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginSchema'
+      responses:
+        '200':
+          description: Токен доступа успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    enum:
+                      - bearer
+        '401':
+          description: Неверный логин или пароль
+
+  /users/me:
+    get:
+      summary: Получить данные текущего пользователя
+      description: Возвращает данные текущего пользователя на основе токена доступа.
+      operationId: read_users_me
+      responses:
+        '200':
+          description: Данные текущего пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Необходимо авторизоваться
+
+  /users/{user_id}:
+    get:
+      summary: Получить данные пользователя по ID
+      description: Возвращает данные пользователя по его ID.
+      operationId: read_user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID пользователя
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Пользователь не найден
+
+  /users/me/first_name:
+    put:
+      summary: Обновить имя текущего пользователя
+      description: Обновляет имя текущего пользователя.
+      operationId: update_first_name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Имя успешно обновлено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "First name updated successfully"
+        '401':
+          description: Необходимо авторизоваться
+
+  /users/me/last_name:
+    put:
+      summary: Обновить фамилию текущего пользователя
+      description: Обновляет фамилию текущего пользователя.
+      operationId: update_last_name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Фамилия успешно обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Last name updated successfully"
+        '401':
+          description: Необходимо авторизоваться
+
+  /users/me/birth_date:
+    put:
+      summary: Обновить дату рождения текущего пользователя
+      description: Обновляет дату рождения текущего пользователя.
+      operationId: update_birth_date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Дата рождения успешно обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Birth date updated successfully"
+        '401':
+          description: Необходимо авторизоваться
+
+  /users/me/email:
+    put:
+      summary: Обновить email текущего пользователя
+      description: Обновляет email текущего пользователя.
+      operationId: update_email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Email успешно обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email updated successfully"
+        '401':
+          description: Необходимо авторизоваться
+
+  /users/me/phone_number:
+    put:
+      summary: Обновить номер телефона текущего пользователя
+      description: Обновляет номер телефона текущего пользователя.
+      operationId: update_phone_number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Номер телефона успешно обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Phone number updated successfully"
+        '401':
+          description: Необходимо авторизоваться
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        email:
+          type: string
+        phone_number:
+          type: string
+        login:
+          type: string
+    UserCreate:
+      type: object
+      properties:
+        login:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    UserUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        email:
+          type: string
+        phone_number:
+          type: string
+    LoginSchema:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+

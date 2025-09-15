@@ -1,0 +1,41 @@
+curl -X POST "http://localhost:8001/users/" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "POST0@kafka.com", "login": "kafka0", "password": "pass123"}'
+
+
+curl -X POST "http://localhost:8001/token" \
+  -H "Content-Type: application/json" \
+  -d '{"login": "kafka0", "password": "pass123"}'
+
+curl -s -X POST http://localhost:8001/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3" \
+  -d '{
+    "title": "Test1 post",
+    "description": "For Kafka testing",
+    "is_private": false,
+    "tags": ["kafka","test"]
+  }'
+
+curl -s http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3"
+
+curl -s -X POST http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08/like \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3"
+
+curl -s -X POST http://localhost:8001/posts/11d03f43-ef45-4f0e-a599-78680aab3f08/comments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYWZrYTAiLCJleHAiOiIyMDI1LTA1LTIxVDE1OjQ3OjIzLjEzMzc3MyJ9.0f8a90580c35418d96fc250601311869ee54ae179205e64034999453507635e3" \
+  -d '{"text":"Hello Kafka0!"}'
+
+kafka-console-consumer --bootstrap-server localhost:9092 --topic post_likes --from-beginning
+
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
+
+uvicorn user_service:app --reload --host 0.0.0.0 --port 8000
+
+docker-compose up -d
+
+psql -h localhost -p 5432 -U Alex  -d users_db
+
+docker exec -it user_kafka_1 bash

@@ -1,0 +1,82 @@
+specification {
+    element person {
+        style {
+            shape person
+            color green
+        }
+    }
+    element softwareSystem
+    element container
+    element component
+}
+
+model {
+    user = person "Пользователь" "Пользователь социальной сети"
+
+    socialNetwork = softwareSystem "Социальная сеть" {
+        apiGateway = container "API Gateway" {
+            description "Принимает запросы от клиентов и направляет их в нужные сервисы"
+            technology "Python, FastAPI"
+        }
+
+        userService = container "User Service" {
+            description "Управление пользователями: регистрация, аутентификация"
+            technology "C++, gRPC"
+        }
+
+        postService = container "Post Service" {
+            description "Управление постами и комментариями"
+            technology "Python, Flask"
+        }
+
+        statsService = container "Stats Service" {
+            description "Подсчет лайков, просмотров, комментариев"
+            technology "C++, gRPC"
+        }
+
+        rabbitMQ = container "RabbitMQ" {
+            description "Обмен сообщениями между сервисами"
+            technology "Message Broker"
+            style {
+                shape queue
+            }
+        }
+
+        userDB = container "PostgreSQL" {
+            description "Хранение данных пользователей"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+
+        postDB = container "PostgreSQL" {
+            description "Хранение постов и комментариев"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+
+        statsDB = container "ClickHouse" {
+            description "Хранение статистики"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+    }
+
+    user -> socialNetwork.apiGateway "Отправляет запросы" "HTTPS"
+    socialNetwork.apiGateway -> socialNetwork.userService "Передает запросы аутентификации" "gRPC"
+    socialNetwork.apiGateway -> socialNetwork.postService "Передает запросы на создание/получение постов" "REST"
+    socialNetwork.apiGateway -> socialNetwork.statsService "Запрос статистики по постам" "gRPC"
+    
+    socialNetwork.userService -> socialNetwork.userDB "Читает/пишет данные пользователей" "SQL"
+    socialNetwork.postService -> socialNetwork.postDB "Читает/пишет посты и комментарии" "SQL"
+    socialNetwork.statsService -> socialNetwork.statsDB "Читает/пишет статистику" "SQL"
+    
+    socialNetwork.postService -> socialNetwork.rabbitMQ "Отправляет события о лайках и просмотрах" "AMQP"
+    socialNetwork.statsService -> socialNetwork.rabbitMQ "Получает события о лайках и просмотрах" "AMQP"
+}
+
